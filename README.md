@@ -1,2 +1,2 @@
-# Longitudinal_MRI_PET_Preprocessing
-MATLAB code to perform longitudinal structural MRI and PET analyses
+# Longitudinal_MRI_Preprocessing
+MATLAB code to perform longitudinal structural MRI analyses
