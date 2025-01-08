@@ -1,0 +1,37 @@
+# This CITATION.cff file was generated with cffinit.
+# Visit https://bit.ly/cffinit to generate yours today!
+
+cff-version: 1.2.0
+title: Longitudinal-MRI-PET-preproc
+message: >-
+  If you use this software, please cite it using the
+  metadata from this file.
+type: software
+authors:
+  - given-names: Hayley Renee Christine
+    family-names: Shanks
+    email: hayley.r.shanks@gmail.com
+    affiliation: Western University
+    orcid: 'https://orcid.org/0000-0003-4502-7170'
+  - given-names: Taylor
+    family-names: Schmitz
+    email: tschmitz@uwo.ca
+    affiliation: Western University
+    orcid: 'https://orcid.org/0000-0003-0585-7524'
+  - given-names: Kate
+    family-names: Onuska
+    email: konuska@uwo.ca
+    affiliation: Western University
+    orcid: 'https://orcid.org/0000-0001-6150-4403'
+repository-code: >-
+  https://github.com/hayleyshanks/Longitudinal-MRI-PET-preproc
+abstract: >-
+  MATLAB code to perform longitudinal pre-processing of
+  structural magnetic resonance imaging and positron
+  emission tomography data. 
+keywords:
+  - magnetic resonance imaging
+  - positron emission tomography
+  - longitudinal
+license: MIT
+date-released: '2024-09-20'
