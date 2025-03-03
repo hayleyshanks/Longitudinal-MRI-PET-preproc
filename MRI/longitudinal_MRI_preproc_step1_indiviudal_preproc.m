@@ -270,7 +270,7 @@ for subI=sub_to_run(N)
                 continue 
             elseif isequal(max(anat_table.Order),1) && strcmpi(indMode{1}, 'off')
                 % no cross sectional data in avgmode
-                continue
+                continue 
             end
             if ~strcmpi(indMode{1}, 'all_times') && isnumeric(indMode{1}) && strcmp(avgMode, 'off')
                 % we're only processing some of the times
@@ -313,7 +313,7 @@ for subI=sub_to_run(N)
                 elseif strcmp(voxel_check, 'est only')
                     %coreg est only
                     mbatch = mbatch + 1;
-                    matlabbatch{mbatch}.spm.spatial.coreg.estimate.ref ={average_anat};
+                    matlabbatch{mbatch}.spm.spatial.coreg.estimate.ref ={coreg_image}; % AW changed this from 'average_anat' to 'coreg_image'. Not sure where the former was supposed to come from. 
                     matlabbatch{mbatch}.spm.spatial.coreg.estimate.source = {to_coreg};
                     matlabbatch{mbatch}.spm.spatial.coreg.estimate.other = {''};
                     matlabbatch{mbatch}.spm.spatial.coreg.estimate.eoptions.cost_fun = 'nmi';
@@ -534,7 +534,7 @@ for subI=sub_to_run(N)
             lorio_TPM = get_files(templatePath, 'enhanced_TPM.nii');
             mbatch=mbatch+1;
             %% run SPREAD segmentation routine. Make sure CAT12 default is to run in expert mode (see function below)
-            % (cat.extopts.expertgui    = 1;) in cat_default.m
+            % (cat.extopts.expertgui    = 1;) in cat_default.m % AW UPDATE: I found that this should actually be set to '2' (developer mode) for all settings to be found in CAT12. 
             for s=1:length(to_seg)
                 SPREAD_segmentation_routine(mbatch, to_seg{s}, lorio_TPM, CAT12_shoot_template, 0.5); % use processing accuracy of 0.5 to begin (default)
             end

@@ -39,6 +39,8 @@ if strcmpi(image_modality, 'MRI')
     if ismember(step_to_run, {'dicomRecon', 'reorientAC', 'checkVoxels', 'coreg', 'longitudinalRegistration', 'segment'})
         longitudinal_MRI_preproc_step1_indiviudal_preproc(subs, study_path, mri_to_run, study_name, avgMode, indMode, ... 
         field_str, templatePath, CAT12_shoot_path,  coreg_image, step_to_run, 1)
+    elseif ismember(step_to_run, {'summarizeSegQC','redoSegProblems'})
+        longitudinal_MRI_preproc_step2_segQC(N, study_path, mri_to_run, study_name , qc_thresh, avgMode, indMode, field_str, templatePath, CAT12_shoot_path, step_to_run, 1)
     elseif ismember(step_to_run, {'buildCustomTemplate', 'addToShoot', 'invertY'})
         if ~isempty(shootTemplateOverride)
             longitudinal_MRI_preproc_step3_createTemplates(subs, study_path, mri_to_run, study_name, field_str, avgMode, indMode,step_to_run, 1, 'shootTemplateOverride', shootTemplateOverride)

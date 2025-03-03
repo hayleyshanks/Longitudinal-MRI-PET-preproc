@@ -4,26 +4,10 @@
 % -1 means data is cross sectional, but was run to exclude cross sectional subjects (or in avgMode)
 % -10 means segmentation was missing
 % -100 means seg failed 
-function longitudinal_MRI_preproc_step2_segQC(N, study_path, mri_to_run, study_name , qc_thresh, avgMode, indMode, field_str, varargin)
-%% lab-specfic paths - will need to be changed by user
-% add path to spm
-functionRoot = '/srv/schmitz/projects/toolboxes/incalab_source_code/human';
-% catch sight of the functions
-addpath(genpath(functionRoot));
-addpath '/srv/schmitz/projects/toolboxes/spm12'; % add path to spm
-% path to the SPM12 tpms (here Lorio 2016 tpm will be used)
-templatePath = '/srv/schmitz/projects/toolboxes/spm12/tpm';
-% path to the CAT12 MNI geodesic shoot template
-CAT12_shoot_path = '/srv/schmitz/projects/toolboxes/spm12/toolbox/cat12/templates_MNI152NLin2009cAsym';
-%%%%%%%%%%%%%%%%%%%%%%%%%%%% End of specific inputs %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% raw participant data should live in a first level subdirectory of the study path
+function longitudinal_MRI_preproc_step2_segQC(N, study_path, mri_to_run, study_name , qc_thresh, avgMode, indMode, field_str, templatePath, CAT12_shoot_path, varargin)
 rootPath = [study_path, filesep, 'first_level'];
-% same idea for spreadsheet path
 sheet_path = [study_path, filesep, 'spreadsheets'];
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%% END OF USER INPUTS %%%%%%%%%%%%%%%%%%%%%%%%
-if ~exist(sheet_path, 'dir')
-    mkdir(sheet_path);
-end
 % parse user inputs
 pars = inputParser;
 % by default, all modules are set to off.
@@ -37,11 +21,13 @@ addRequired(pars, 'qc_thresh', @isnumeric);
 addRequired(pars, 'avgMode', @iscell);
 addRequired(pars, 'indMode', @iscell);
 addRequired(pars, 'field_str', @isnumeric);
+addRequired(pars, 'templatePath', @ischar);
+addRequired(pars, 'CAT12_shoot_path', @ischar);
 %add optional inputs. 
 addParameter(pars,'summarizeSegQC',default_run,@isnumeric); 
 addParameter(pars,'redoSegProblems',default_run,@isnumeric);
 % parse the function inputs
-parse(pars, N, study_path, mri_to_run, study_name, qc_thresh, avgMode, indMode,  field_str, varargin{:});
+parse(pars, N, study_path, mri_to_run, study_name, qc_thresh, avgMode, indMode,  field_str, templatePath, CAT12_shoot_path, varargin{:});
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% check that the mode variables are set correctly 
 if isequal(sum(strcmpi(avgMode, {'on', 'off'})),0)
@@ -151,7 +137,7 @@ if pars.Results.summarizeSegQC
             names_to_check = {'timepoint_IQR','timepoint_fails'}; 
             if isequal(sum(contains(mastersheet.Properties.VariableNames, names_to_check)), 0)
                 mastersheet.timepoint_IQR = nan(height(mastersheet),1);
-                mastersheet.timepoint_IQR_fails = nan(height(mastersheet),1);
+                mastersheet.timepoint_fails = nan(height(mastersheet),1); % AW: Is this supposed to read 'mastersheet.timepoint_fails'?
             end
             for subI=sub_to_run(N)
                 sub_dir = fullfile(rootPath,RIDs{subI});
@@ -173,7 +159,7 @@ if pars.Results.summarizeSegQC
                             check_sum = sum(check, 2);
                             row_num = find(check_sum == size(check,2));
                             mastersheet.timepoint_IQR(row_num) = -1;
-                            mastersheet.timepoint_IQR_fails(row_num) = 1;
+                            mastersheet.timepoint_fails(row_num) = 1;
                     else
                         if ~strcmpi(indMode{1}, 'all_times') && isnumeric(indMode{1})
                             % we're only processing some of the times. drop
@@ -195,7 +181,7 @@ if pars.Results.summarizeSegQC
                             mat = get_files(seg_dir, 'cat_*.mat');
                             if isempty(mat)
                                 mastersheet.timepoint_IQR(row_num) = -10;
-                                mastersheet.timepoint_IQR_fails(row_num) = 1;
+                                mastersheet.timepoint_fails(row_num) = 1;
                             else
                                 mat = load(mat);
                                 mat = mat.S;
@@ -203,7 +189,7 @@ if pars.Results.summarizeSegQC
                                     % this means segmentation failed for this subject. save
                                     % this out
                                     mastersheet.timepoint_IQR(row_num)= -100;
-                                    mastersheet.timepoint_IQR_fails(row_num) = 1;
+                                    mastersheet.timepoint_fails(row_num) = 1;
                                 else
                                     % get the quality ratings from the catlog
                                     %% image quality rating
@@ -213,9 +199,9 @@ if pars.Results.summarizeSegQC
                                     iqr = extractBetween(iqr, ':', '%'); % this could get messed up if cat12 changes their output
                                     mastersheet.timepoint_IQR(row_num) = str2num(cell2mat(iqr)); 
                                     if str2num(cell2mat(iqr)) < qc_thresh
-                                        mastersheet.timepoint_IQR_fails(row_num) = 1;
+                                        mastersheet.timepoint_fails(row_num) = 1;
                                     else
-                                        mastersheet.timepoint_IQR_fails(row_num) = 0;
+                                        mastersheet.timepoint_fails(row_num) = 0;
                                     end
                                     %% could also extract more information from the mat file. The quality ratings or quality measures 
                                     %% look useful, but unsure how they are scored (and why the same variable in both has a different score. Links below are unclear 
@@ -272,7 +258,7 @@ if pars.Results.redoSegProblems
     end
     if ~strcmpi(indMode{1}, 'off')
         for t =1:length(mri_to_run)
-            qc_fails = mastersheet(mastersheet.timepoint_IQR_fails == 1, :);
+            qc_fails = mastersheet(mastersheet.timepoint_fails == 1, :);
             % if we are not analyzing cross sectional data, drop these p's
             if strcmpi('excludeCrossSectionalSubjects', indMode{2})
                 qc_fails = qc_fails(qc_fails.timepoint_IQR ~= -1, :);
