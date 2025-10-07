@@ -155,6 +155,7 @@ if pars.Results.dicomRecon || pars.Results.reorientAC
                                     spm_jobman('run',matlabbatch(mbatch))
                                 end
                             end
+                        end
                         if ~exist(fullfile(scan_dir, 'dicom'), 'dir')
                             mkdir(fullfile(scan_dir, 'dicom'))
                         end
@@ -567,3 +568,4 @@ for subI=sub_to_run(N)
 end
 
 end
+
