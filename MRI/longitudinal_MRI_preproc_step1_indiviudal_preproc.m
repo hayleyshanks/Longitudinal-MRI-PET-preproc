@@ -130,8 +130,31 @@ if pars.Results.dicomRecon || pars.Results.reorientAC
                             % subdirectory
                             dcm_set = cellstr(get_files(scan_dir, '*.dcm'));
                             hdr = dicominfo(dcm_set{1,:});
-                            dicm2nii([scan_dir filesep '*.dcm'], scan_dir, '3D nii');
-                        end
+                            % 2025-10-07 - sometimes dicom2nii fails but
+                            % SPM is still able to work
+                            try
+                                dicm2nii([scan_dir filesep '*.dcm'], scan_dir, '3D nii');
+                            catch ME
+                                % if dicom to nifti fails, display the
+                                % warning and see if SPM can recon the
+                                % images. sometimes that works
+                                 disp(['issue reconstructing dicoms for: ',  scan_dir])
+                                 warning('dicm2nii failed: %s', ME.message);
+                                 try 
+                                    to_try = cellstr(get_files(scan_dir, '*.dcm'));
+                                    mbatch = mbatch+1;
+                                    matlabbatch{mbatch}.spm.util.import.dicom.data =to_try;
+                                    % no directory hierarchy
+                                    matlabbatch{mbatch}.spm.util.import.dicom.root = 'flat';
+                                    % save to the scan dir
+                                    matlabbatch{mbatch}.spm.util.import.dicom.outdir = {scan_dir};
+                                    matlabbatch{mbatch}.spm.util.import.dicom.protfilter = '.*';
+                                    matlabbatch{mbatch}.spm.util.import.dicom.convopts.format = 'nii';
+                                    matlabbatch{mbatch}.spm.util.import.dicom.convopts.meta = 0;
+                                    matlabbatch{mbatch}.spm.util.import.dicom.convopts.icedims = 0;
+                                    spm_jobman('run',matlabbatch(mbatch))
+                                end
+                            end
                         if ~exist(fullfile(scan_dir, 'dicom'), 'dir')
                             mkdir(fullfile(scan_dir, 'dicom'))
                         end
@@ -542,4 +565,5 @@ for subI=sub_to_run(N)
         clear to_seg
     end   
 end
+
 end
